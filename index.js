@@ -29,6 +29,7 @@ async function run() {
     const database = client.db("bistroDB");
     const menuCollection = database.collection("menu");
     const reviewsCollection = database.collection("reviews");
+    const cartCollection = database.collection("carts");
 
     // Get all menu
     app.get("/menu", async (req, res) => {
@@ -41,6 +42,21 @@ async function run() {
     app.get("/reviews", async (req, res) => {
       const cursor = reviewsCollection.find({});
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // Add to cart
+    app.post("/carts", async (req, res) => {
+      const item = req.body;
+      const doc = {
+        ...item,
+      };
+      const result = await cartCollection.insertOne(doc);
+      if (result.insertedId) {
+        console.log("Add to cart successfully!");
+      } else {
+        console.log("Add to card failed!");
+      }
       res.send(result);
     });
 
