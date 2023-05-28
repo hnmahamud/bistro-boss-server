@@ -30,6 +30,7 @@ async function run() {
     const menuCollection = database.collection("menu");
     const reviewsCollection = database.collection("reviews");
     const cartCollection = database.collection("carts");
+    const userCollection = database.collection("users");
 
     // Get all menu
     app.get("/menu", async (req, res) => {
@@ -42,6 +43,29 @@ async function run() {
     app.get("/reviews", async (req, res) => {
       const cursor = reviewsCollection.find({});
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // Create user
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const isExist = await userCollection.findOne(query);
+
+      if (isExist) {
+        return res.send({ message: "User already exist!" });
+      }
+
+      const doc = {
+        ...user,
+      };
+
+      const result = await userCollection.insertOne(doc);
+      if (result.insertedId) {
+        console.log("User added successfully!");
+      } else {
+        console.log("User added failed!");
+      }
       res.send(result);
     });
 
