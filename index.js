@@ -46,6 +46,13 @@ async function run() {
       res.send(result);
     });
 
+    // Get all users
+    app.get("/users", async (req, res) => {
+      const cursor = userCollection.find({});
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // Create user
     app.post("/users", async (req, res) => {
       const user = req.body;
