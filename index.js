@@ -105,6 +105,19 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        return res.send({ admin: false });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
     // Make admin
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
@@ -130,7 +143,7 @@ async function run() {
       const cursor = cartCollection.find(query);
       const result = await cursor.toArray();
       if (!email) {
-        res.send([]);
+        return res.send([]);
       }
 
       const decodedEmail = req.decoded.email;
