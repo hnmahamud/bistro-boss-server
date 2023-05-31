@@ -52,6 +52,18 @@ async function run() {
     const cartCollection = database.collection("carts");
     const userCollection = database.collection("users");
 
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
+      }
+      next();
+    };
+
     // Create jwt token
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -76,7 +88,7 @@ async function run() {
     });
 
     // Get all users
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const cursor = userCollection.find({});
       const result = await cursor.toArray();
       res.send(result);
@@ -105,6 +117,7 @@ async function run() {
       res.send(result);
     });
 
+    // Check user admin or not
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
 
