@@ -80,6 +80,19 @@ async function run() {
       res.send(result);
     });
 
+    // Create user
+    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
+
+      if (result.insertedId) {
+        console.log("Item added successfully!");
+      } else {
+        console.log("Item added failed!");
+      }
+      res.send(result);
+    });
+
     // Get all reviews
     app.get("/reviews", async (req, res) => {
       const cursor = reviewsCollection.find({});
