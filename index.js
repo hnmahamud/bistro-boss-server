@@ -80,7 +80,7 @@ async function run() {
       res.send(result);
     });
 
-    // Create user
+    // Create menu
     app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
@@ -89,6 +89,19 @@ async function run() {
         console.log("Item added successfully!");
       } else {
         console.log("Item added failed!");
+      }
+      res.send(result);
+    });
+
+    // delete menu
+    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const itemId = req.params.id;
+      const query = { _id: new ObjectId(itemId) };
+      const result = await menuCollection.deleteOne(query);
+      if (result.deletedCount === 1) {
+        console.log("Successfully deleted one document.");
+      } else {
+        console.log("No documents matched the query. Deleted 0 documents.");
       }
       res.send(result);
     });
