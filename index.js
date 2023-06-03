@@ -2,6 +2,7 @@ const express = require("express");
 var cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SK_KEY);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ async function run() {
     const reviewsCollection = database.collection("reviews");
     const cartCollection = database.collection("carts");
     const userCollection = database.collection("users");
+    const paymentCollection = database.collection("payments");
 
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
@@ -222,6 +224,35 @@ async function run() {
         console.log("No documents matched the query. Deleted 0 documents.");
       }
       res.send(result);
+    });
+
+    // Stripe payment intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      const cartItemIds = payment.cartItems.map((id) => new ObjectId(id));
+
+      const query = { _id: { $in: cartItemIds } };
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send({ insertResult, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
