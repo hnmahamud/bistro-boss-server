@@ -255,6 +255,33 @@ async function run() {
       res.send({ insertResult, deleteResult });
     });
 
+    app.get("/admin-stats", verifyJWT, verifyAdmin, async (req, res) => {
+      const customers = await userCollection.estimatedDocumentCount();
+      const products = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentCollection.estimatedDocumentCount();
+
+      // Using array reduce
+      // const allOrders = await paymentCollection.find().toArray();
+      // const initialValue = 0;
+      // const revenue = allOrders.reduce(
+      //   (accumulator, currentValue) => accumulator + currentValue.price,
+      //   initialValue
+      // );
+
+      // Using mongodb query
+      const total = await paymentCollection
+        .aggregate([{ $group: { _id: null, totalPrice: { $sum: "$price" } } }])
+        .toArray();
+      const revenue = total.length > 0 ? total[0].totalPrice : 0;
+
+      res.send({
+        customers,
+        products,
+        orders,
+        revenue,
+      });
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
